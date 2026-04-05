@@ -1,23 +1,8 @@
-// Client-side JavaScript for enhanced functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Password confirmation validation
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
-            const password = document.getElementById('password');
-            const confirmPassword = document.getElementById('confirmPassword');
-            
-            if (password && confirmPassword && password.value !== confirmPassword.value) {
-                e.preventDefault();
-                alert('Пароли не совпадают!');
-                confirmPassword.focus();
-            }
-        });
-    }
+// Client-side enhancements for cafeteria forms
 
-    // Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', () => {
     const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
+    alerts.forEach((alert) => {
         setTimeout(() => {
             alert.style.opacity = '0';
             alert.style.transition = 'opacity 0.5s ease';
@@ -27,15 +12,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 
-    // Form validation enhancement
     const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const inputs = form.querySelectorAll('input[required]');
+    forms.forEach((form) => {
+        form.addEventListener('submit', (e) => {
+            const requiredInputs = form.querySelectorAll('[required]');
             let isValid = true;
 
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
+            requiredInputs.forEach((input) => {
+                if (!String(input.value || '').trim()) {
                     isValid = false;
                     input.style.borderColor = '#e74c3c';
                 } else {
@@ -43,26 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
+            const quantityInput = form.querySelector('input[name="quantity"]');
+            if (quantityInput && Number(quantityInput.value) < 1) {
+                isValid = false;
+                quantityInput.style.borderColor = '#e74c3c';
+            }
+
             if (!isValid) {
                 e.preventDefault();
-                alert('Пожалуйста, заполните все обязательные поля');
-            }
-        });
-    });
-
-    // Add loading state to buttons
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (this.type === 'submit' || this.tagName === 'BUTTON') {
-                this.style.opacity = '0.7';
-                this.disabled = true;
-                
-                // Re-enable after 3 seconds in case of error
-                setTimeout(() => {
-                    this.style.opacity = '1';
-                    this.disabled = false;
-                }, 3000);
+                alert('Проверьте обязательные поля формы');
             }
         });
     });

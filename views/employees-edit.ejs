@@ -7,62 +7,64 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">📊 Учет ремонта</a>
-                <ul class="nav-links">
-                    <li><a href="/">Дашборд</a></li>
-                    <li><a href="/equipment">Оборудование</a></li>
-                    <li><a href="/repairs">Ремонты</a></li>
-                    <li><a href="/employees">Сотрудники</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="logo">🍽️ Университетская столовая</a>
+            <ul class="nav-links">
+                <li><a href="/">Дашборд</a></li>
+                <li><a href="/menu">Меню</a></li>
+                <li><a href="/orders">Заказы</a></li>
+                <li><a href="/staff" class="active">Персонал</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
-    <main class="main">
-        <div class="container">
-            <div class="page-header">
-                <h1>Редактирование сотрудника</h1>
-                <a href="/employees" class="btn btn-secondary">← Назад к списку</a>
-            </div>
-
-            <div class="form-container">
-                <form action="/employees/edit/<%= employee.id %>" method="POST">
-                    <div class="form-group">
-                        <label for="name">ФИО:</label>
-                        <input type="text" id="name" name="name" value="<%= employee.name %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="position">Должность:</label>
-                        <input type="text" id="position" name="position" value="<%= employee.position %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="department">Отдел:</label>
-                        <input type="text" id="department" name="department" value="<%= employee.department %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Телефон:</label>
-                        <input type="tel" id="phone" name="phone" value="<%= employee.phone || '' %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" value="<%= employee.email || '' %>">
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                        <a href="/employees" class="btn btn-secondary">Отмена</a>
-                    </div>
-                </form>
-            </div>
+<main class="main">
+    <div class="container">
+        <div class="page-header">
+            <h1>Редактирование сотрудника</h1>
+            <a href="/staff" class="btn btn-secondary">← Назад к списку</a>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        <div class="form-container">
+            <form action="/staff/edit/<%= staffMember.id %>" method="POST">
+                <div class="form-group">
+                    <label for="name">ФИО:</label>
+                    <input type="text" id="name" name="name" value="<%= staffMember.name %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Должность:</label>
+                    <input type="text" id="position" name="position" value="<%= staffMember.position %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="shift">Смена:</label>
+                    <select id="shift" name="shift" required>
+                        <option value="Утренняя" <%= staffMember.shift === 'Утренняя' ? 'selected' : '' %>>Утренняя</option>
+                        <option value="Дневная" <%= staffMember.shift === 'Дневная' ? 'selected' : '' %>>Дневная</option>
+                        <option value="Вечерняя" <%= staffMember.shift === 'Вечерняя' ? 'selected' : '' %>>Вечерняя</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Телефон:</label>
+                    <input type="tel" id="phone" name="phone" value="<%= staffMember.phone || '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" value="<%= staffMember.email || '' %>">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a href="/staff" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
         </div>
-    </footer>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container"><p>&copy; 2026 Университетская столовая</p></div>
+</footer>
 </body>
 </html>

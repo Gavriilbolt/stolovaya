@@ -7,83 +7,73 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">📊 Учет ремонта</a>
-                <ul class="nav-links">
-                    <li><a href="/">Дашборд</a></li>
-                    <li><a href="/equipment">Оборудование</a></li>
-                    <li><a href="/repairs">Ремонты</a></li>
-                    <li><a href="/employees">Сотрудники</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="logo">🍽️ Университетская столовая</a>
+            <ul class="nav-links">
+                <li><a href="/">Дашборд</a></li>
+                <li><a href="/menu" class="active">Меню</a></li>
+                <li><a href="/orders">Заказы</a></li>
+                <li><a href="/staff">Персонал</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
-    <main class="main">
-        <div class="container">
-            <div class="page-header">
-                <h1>Редактирование оборудования</h1>
-                <a href="/equipment" class="btn btn-secondary">← Назад к списку</a>
-            </div>
-
-            <div class="form-container">
-                <form action="/equipment/edit/<%= equipment.id %>" method="POST">
-                    <div class="form-group">
-                        <label for="type_id">Тип оборудования:</label>
-                        <select id="type_id" name="type_id" required>
-                            <option value="">Выберите тип</option>
-                            <% equipmentTypes.forEach(type => { %>
-                                <option value="<%= type.id %>" <%= equipment.type_id == type.id ? 'selected' : '' %>>
-                                    <%= type.name %>
-                                </option>
-                            <% }) %>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="inventory_number">Инвентарный номер:</label>
-                        <input type="text" id="inventory_number" name="inventory_number" 
-                               value="<%= equipment.inventory_number %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="name">Название:</label>
-                        <input type="text" id="name" name="name" value="<%= equipment.name %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="model">Модель:</label>
-                        <input type="text" id="model" name="model" value="<%= equipment.model || '' %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="purchase_date">Дата приобретения:</label>
-                        <input type="date" id="purchase_date" name="purchase_date" 
-                               value="<%= equipment.purchase_date %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="location">Местонахождение:</label>
-                        <input type="text" id="location" name="location" value="<%= equipment.location || '' %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Статус:</label>
-                        <select id="status" name="status">
-                            <option value="active" <%= equipment.status == 'active' ? 'selected' : '' %>>Работает</option>
-                            <option value="repair" <%= equipment.status == 'repair' ? 'selected' : '' %>>В ремонте</option>
-                            <option value="inactive" <%= equipment.status == 'inactive' ? 'selected' : '' %>>Неактивно</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                        <a href="/equipment" class="btn btn-secondary">Отмена</a>
-                    </div>
-                </form>
-            </div>
+<main class="main">
+    <div class="container">
+        <div class="page-header">
+            <h1>Редактирование блюда</h1>
+            <a href="/menu" class="btn btn-secondary">← Назад к меню</a>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        <div class="form-container">
+            <form action="/menu/edit/<%= menuItem.id %>" method="POST">
+                <div class="form-group">
+                    <label for="category_id">Категория:</label>
+                    <select id="category_id" name="category_id" required>
+                        <% categories.forEach(category => { %>
+                            <option value="<%= category.id %>" <%= menuItem.category_id == category.id ? 'selected' : '' %>>
+                                <%= category.name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="name">Название блюда:</label>
+                    <input type="text" id="name" name="name" value="<%= menuItem.name %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Описание:</label>
+                    <textarea id="description" name="description" rows="3"><%= menuItem.description || '' %></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="price">Цена (руб.):</label>
+                    <input type="number" id="price" name="price" step="0.01" min="0" value="<%= menuItem.price %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="calories">Калорийность (ккал):</label>
+                    <input type="number" id="calories" name="calories" min="0" value="<%= menuItem.calories || '' %>">
+                </div>
+                <div class="form-group">
+                    <label for="is_available">Доступность:</label>
+                    <select id="is_available" name="is_available">
+                        <option value="1" <%= menuItem.is_available ? 'selected' : '' %>>Доступно</option>
+                        <option value="0" <%= !menuItem.is_available ? 'selected' : '' %>>Нет в наличии</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a href="/menu" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
         </div>
-    </footer>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container"><p>&copy; 2026 Университетская столовая</p></div>
+</footer>
 </body>
 </html>

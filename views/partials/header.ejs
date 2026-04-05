@@ -3,34 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Node.js + SQLite App</title>
+    <title><%= title %> | Университетская столовая</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">NodeSQLite App</a>
-                <ul class="nav-links">
-                    <li><a href="/">Главная</a></li>
-                    <% if (user) { %>
-                        <li><a href="/users">Пользователи</a></li>
-                        <li><a href="/profile/<%= user.id %>">Профиль</a></li>
-                        <li>
-                            <form action="/logout" method="POST" style="display: inline;">
-                                <button type="submit" class="btn-logout">
-                                    Выйти (<%= user.name %>)
-                                </button>
-                            </form>
-                        </li>
-                    <% } else { %>
-                        <li><a href="/login">Вход</a></li>
-                        <li><a href="/register">Регистрация</a></li>
-                    <% } %>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main">
-        <div class="container">
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="logo">🍽️ Университетская столовая</a>
+            <ul class="nav-links">
+                <li><a href="/">Дашборд</a></li>
+                <li><a href="/menu">Меню</a></li>
+                <li><a href="/orders">Заказы</a></li>
+                <li><a href="/staff">Персонал</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+<main class="main">
+    <div class="container">

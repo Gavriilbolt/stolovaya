@@ -7,104 +7,96 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">📊 Учет ремонта</a>
-                <ul class="nav-links">
-                    <li><a href="/">Дашборд</a></li>
-                    <li><a href="/equipment">Оборудование</a></li>
-                    <li><a href="/repairs">Ремонты</a></li>
-                    <li><a href="/employees" class="active">Сотрудники</a></li>
-                </ul>
-            </nav>
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="logo">🍽️ Университетская столовая</a>
+            <ul class="nav-links">
+                <li><a href="/">Дашборд</a></li>
+                <li><a href="/menu">Меню</a></li>
+                <li><a href="/orders">Заказы</a></li>
+                <li><a href="/staff" class="active">Персонал</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main class="main">
+    <div class="container">
+        <div class="page-header">
+            <h1>Персонал столовой</h1>
+            <button class="btn btn-primary" onclick="toggleForm()">+ Добавить сотрудника</button>
         </div>
-    </header>
 
-    <main class="main">
-        <div class="container">
-            <div class="page-header">
-                <h1>Сотрудники</h1>
-                <button class="btn btn-primary" onclick="toggleForm()">+ Добавить сотрудника</button>
-            </div>
+        <div id="addForm" class="form-container" style="display:none;">
+            <h3>Добавить сотрудника</h3>
+            <form action="/staff" method="POST">
+                <div class="form-group">
+                    <label for="name">ФИО:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Должность:</label>
+                    <input type="text" id="position" name="position" required>
+                </div>
+                <div class="form-group">
+                    <label for="shift">Смена:</label>
+                    <select id="shift" name="shift" required>
+                        <option value="Утренняя">Утренняя</option>
+                        <option value="Дневная">Дневная</option>
+                        <option value="Вечерняя">Вечерняя</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Телефон:</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleForm()">Отмена</button>
+            </form>
+        </div>
 
-            <!-- Форма добавления сотрудника -->
-            <div id="addForm" class="form-container" style="display: none;">
-                <h3>Добавить нового сотрудника</h3>
-                <form action="/employees" method="POST">
-                    <div class="form-group">
-                        <label for="name">ФИО:</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="position">Должность:</label>
-                        <input type="text" id="position" name="position" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="department">Отдел:</label>
-                        <input type="text" id="department" name="department" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Телефон:</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Добавить</button>
-                    <button type="button" class="btn btn-secondary" onclick="toggleForm()">Отмена</button>
-                </form>
-            </div>
-
-            <!-- Список сотрудников -->
-            <div class="employees-list">
-                <% if (employees.length > 0) { %>
-                    <div class="employees-grid">
-                        <% employees.forEach(employee => { %>
-                            <div class="employee-card">
-                                <div class="employee-header">
-                                    <h3><%= employee.name %></h3>
-                                    <div class="action-buttons">
-                                        <a href="/employees/edit/<%= employee.id %>" class="btn btn-small btn-primary">✏️</a>
-                                        <form action="/employees/delete/<%= employee.id %>" method="POST" style="display: inline;">
-                                            <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Удалить этого сотрудника?')">🗑️</button>
-                                        </form>
-                                    </div>
-                                </div>
-                                <div class="employee-details">
-                                    <p><strong>Должность:</strong> <%= employee.position %></p>
-                                    <p><strong>Отдел:</strong> <%= employee.department %></p>
-                                    <% if (employee.phone) { %>
-                                        <p><strong>Телефон:</strong> <%= employee.phone %></p>
-                                    <% } %>
-                                    <% if (employee.email) { %>
-                                        <p><strong>Email:</strong> <%= employee.email %></p>
-                                    <% } %>
-                                </div>
+        <% if (staff.length > 0) { %>
+            <div class="employees-grid">
+                <% staff.forEach(member => { %>
+                    <div class="employee-card">
+                        <div class="employee-header">
+                            <h3><%= member.name %></h3>
+                            <div class="action-buttons">
+                                <a href="/staff/edit/<%= member.id %>" class="btn btn-small btn-primary">✏️</a>
+                                <form action="/staff/delete/<%= member.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Удалить сотрудника?')">🗑️</button>
+                                </form>
                             </div>
-                        <% }) %>
+                        </div>
+                        <div class="employee-details">
+                            <p><strong>Должность:</strong> <%= member.position %></p>
+                            <p><strong>Смена:</strong> <%= member.shift %></p>
+                            <% if (member.phone) { %><p><strong>Телефон:</strong> <%= member.phone %></p><% } %>
+                            <% if (member.email) { %><p><strong>Email:</strong> <%= member.email %></p><% } %>
+                        </div>
                     </div>
-                <% } else { %>
-                    <div class="empty-state">
-                        <p>Сотрудники не найдены</p>
-                    </div>
-                <% } %>
+                <% }) %>
             </div>
-        </div>
-    </main>
+        <% } else { %>
+            <div class="empty-state"><p>Сотрудники пока не добавлены</p></div>
+        <% } %>
+    </div>
+</main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Система учета ремонта оборудования</p>
-        </div>
-    </footer>
+<footer class="footer">
+    <div class="container"><p>&copy; 2026 Университетская столовая</p></div>
+</footer>
 
-    <script>
-        function toggleForm() {
-            const form = document.getElementById('addForm');
-            form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        }
-    </script>
+<script>
+    function toggleForm() {
+        const form = document.getElementById('addForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
 </body>
 </html>

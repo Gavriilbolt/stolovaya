@@ -5,371 +5,403 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Настройка шаблонизатора EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Подключаем базу данных
 const db = require('./config/database');
-
-// Подключаем контроллер отчетов
 const ReportController = require('./controllers/reportController');
 
-// Главная страница - дашборд
 app.get('/', async (req, res) => {
     try {
-        const stats = await db.all(`
-            SELECT 
-                (SELECT COUNT(*) FROM equipment) as total_equipment,
-                (SELECT COUNT(*) FROM equipment WHERE status = 'repair') as equipment_in_repair,
-                (SELECT COUNT(*) FROM repairs) as total_repairs,
-                (SELECT COUNT(*) FROM employees) as total_employees
+        const [stats] = await db.all(`
+            SELECT
+                (SELECT COUNT(*) FROM menu_items) AS total_menu_items,
+                (SELECT COUNT(*) FROM menu_items WHERE is_available = 1) AS available_menu_items,
+                (SELECT COUNT(*) FROM orders) AS total_orders,
+                (SELECT COUNT(*) FROM staff) AS total_staff
         `);
-        
-        const recentRepairs = await db.all(`
-            SELECT r.*, e.name as equipment_name, emp.name as employee_name
-            FROM repairs r
-            LEFT JOIN equipment e ON r.equipment_id = e.id
-            LEFT JOIN employees emp ON r.employee_id = emp.id
-            ORDER BY r.repair_date DESC LIMIT 5
+
+        const recentOrders = await db.all(`
+            SELECT o.*, mi.name AS menu_item_name, s.name AS staff_name
+            FROM orders o
+            LEFT JOIN menu_items mi ON o.menu_item_id = mi.id
+            LEFT JOIN staff s ON o.staff_id = s.id
+            ORDER BY o.order_date DESC, o.id DESC
+            LIMIT 5
         `);
 
         res.render('dashboard', {
-            title: 'Система учета ремонта оборудования',
-            stats: stats[0],
-            recentRepairs: recentRepairs
+            title: 'Университетская столовая',
+            stats: stats || {
+                total_menu_items: 0,
+                available_menu_items: 0,
+                total_orders: 0,
+                total_staff: 0
+            },
+            recentOrders
         });
     } catch (error) {
         console.error('Ошибка загрузки дашборда:', error);
         res.render('dashboard', {
-            title: 'Система учета ремонта оборудования',
-            stats: { total_equipment: 0, equipment_in_repair: 0, total_repairs: 0, total_employees: 0 },
-            recentRepairs: []
+            title: 'Университетская столовая',
+            stats: {
+                total_menu_items: 0,
+                available_menu_items: 0,
+                total_orders: 0,
+                total_staff: 0
+            },
+            recentOrders: []
         });
     }
 });
 
-// 📋 СТРАНИЦА ОБОРУДОВАНИЯ
-app.get('/equipment', async (req, res) => {
+app.get('/menu', async (req, res) => {
     try {
-        const equipment = await db.all(`
-            SELECT e.*, et.name as type_name 
-            FROM equipment e 
-            LEFT JOIN equipment_types et ON e.type_id = et.id 
-            ORDER BY e.inventory_number
+        const menuItems = await db.all(`
+            SELECT mi.*, mc.name AS category_name
+            FROM menu_items mi
+            LEFT JOIN menu_categories mc ON mi.category_id = mc.id
+            ORDER BY mc.name, mi.name
         `);
-        
-        const equipmentTypes = await db.all('SELECT * FROM equipment_types ORDER BY name');
-        
+
+        const categories = await db.all('SELECT * FROM menu_categories ORDER BY name');
+
         res.render('equipment', {
-            title: 'Оборудование',
-            equipment: equipment,
-            equipmentTypes: equipmentTypes
+            title: 'Меню столовой',
+            menuItems,
+            categories
         });
     } catch (error) {
-        console.error('Ошибка загрузки оборудования:', error);
+        console.error('Ошибка загрузки меню:', error);
         res.render('equipment', {
-            title: 'Оборудование',
-            equipment: [],
-            equipmentTypes: []
+            title: 'Меню столовой',
+            menuItems: [],
+            categories: []
         });
     }
 });
 
-// ➕ ДОБАВЛЕНИЕ НОВОГО ОБОРУДОВАНИЯ
-app.post('/equipment', async (req, res) => {
+app.post('/menu', async (req, res) => {
     try {
-        const { type_id, inventory_number, name, model, purchase_date, location } = req.body;
-        
+        const { category_id, name, description, price, calories, is_available } = req.body;
+
         await db.run(
-            `INSERT INTO equipment (type_id, inventory_number, name, model, purchase_date, location) 
+            `INSERT INTO menu_items (category_id, name, description, price, calories, is_available)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [type_id, inventory_number, name, model, purchase_date, location]
+            [
+                category_id,
+                name,
+                description || null,
+                parseFloat(price) || 0,
+                calories ? parseInt(calories, 10) : null,
+                is_available === '0' ? 0 : 1
+            ]
         );
-        
-        res.redirect('/equipment');
+
+        res.redirect('/menu');
     } catch (error) {
-        console.error('Ошибка добавления оборудования:', error);
-        res.render('error', { 
+        console.error('Ошибка добавления блюда:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось добавить оборудование: ' + error.message 
+            error: 'Не удалось добавить блюдо: ' + error.message
         });
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ ОБОРУДОВАНИЯ - форма
-app.get('/equipment/edit/:id', async (req, res) => {
+app.get('/menu/edit/:id', async (req, res) => {
     try {
-        const equipment = await db.get(`
-            SELECT e.*, et.name as type_name 
-            FROM equipment e 
-            LEFT JOIN equipment_types et ON e.type_id = et.id 
-            WHERE e.id = ?
+        const menuItem = await db.get(`
+            SELECT mi.*, mc.name AS category_name
+            FROM menu_items mi
+            LEFT JOIN menu_categories mc ON mi.category_id = mc.id
+            WHERE mi.id = ?
         `, [req.params.id]);
-        
-        const equipmentTypes = await db.all('SELECT * FROM equipment_types ORDER BY name');
-        
+
+        const categories = await db.all('SELECT * FROM menu_categories ORDER BY name');
+
+        if (!menuItem) {
+            return res.redirect('/menu');
+        }
+
         res.render('equipment-edit', {
-            title: 'Редактирование оборудования',
-            equipment: equipment,
-            equipmentTypes: equipmentTypes
+            title: 'Редактирование блюда',
+            menuItem,
+            categories
         });
     } catch (error) {
-        console.error('Ошибка загрузки оборудования для редактирования:', error);
-        res.redirect('/equipment');
+        console.error('Ошибка загрузки блюда:', error);
+        res.redirect('/menu');
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ ОБОРУДОВАНИЯ - сохранение
-app.post('/equipment/edit/:id', async (req, res) => {
+app.post('/menu/edit/:id', async (req, res) => {
     try {
-        const { type_id, inventory_number, name, model, purchase_date, location, status } = req.body;
-        
+        const { category_id, name, description, price, calories, is_available } = req.body;
+
         await db.run(
-            `UPDATE equipment SET 
-                type_id = ?, inventory_number = ?, name = ?, model = ?, 
-                purchase_date = ?, location = ?, status = ?
+            `UPDATE menu_items
+             SET category_id = ?, name = ?, description = ?, price = ?, calories = ?, is_available = ?
              WHERE id = ?`,
-            [type_id, inventory_number, name, model, purchase_date, location, status, req.params.id]
+            [
+                category_id,
+                name,
+                description || null,
+                parseFloat(price) || 0,
+                calories ? parseInt(calories, 10) : null,
+                is_available === '0' ? 0 : 1,
+                req.params.id
+            ]
         );
-        
-        res.redirect('/equipment');
+
+        res.redirect('/menu');
     } catch (error) {
-        console.error('Ошибка редактирования оборудования:', error);
-        res.render('error', { 
+        console.error('Ошибка редактирования блюда:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось обновить оборудование: ' + error.message 
+            error: 'Не удалось обновить блюдо: ' + error.message
         });
     }
 });
 
-// 🗑️ УДАЛЕНИЕ ОБОРУДОВАНИЯ
-app.post('/equipment/delete/:id', async (req, res) => {
+app.post('/menu/delete/:id', async (req, res) => {
     try {
-        await db.run('DELETE FROM equipment WHERE id = ?', [req.params.id]);
-        res.redirect('/equipment');
+        await db.run('DELETE FROM menu_items WHERE id = ?', [req.params.id]);
+        res.redirect('/menu');
     } catch (error) {
-        console.error('Ошибка удаления оборудования:', error);
-        res.render('error', { 
+        console.error('Ошибка удаления блюда:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось удалить оборудование: ' + error.message 
+            error: 'Не удалось удалить блюдо: ' + error.message
         });
     }
 });
 
-// 🔧 СТРАНИЦА РЕМОНТОВ
-app.get('/repairs', async (req, res) => {
+app.get('/orders', async (req, res) => {
     try {
-        const repairs = await db.all(`
-            SELECT r.*, e.name as equipment_name, e.inventory_number, emp.name as employee_name
-            FROM repairs r
-            LEFT JOIN equipment e ON r.equipment_id = e.id
-            LEFT JOIN employees emp ON r.employee_id = emp.id
-            ORDER BY r.repair_date DESC
+        const orders = await db.all(`
+            SELECT o.*, mi.name AS menu_item_name, mi.price AS menu_price, s.name AS staff_name
+            FROM orders o
+            LEFT JOIN menu_items mi ON o.menu_item_id = mi.id
+            LEFT JOIN staff s ON o.staff_id = s.id
+            ORDER BY o.order_date DESC, o.id DESC
         `);
-        
-        const equipment = await db.all('SELECT * FROM equipment ORDER BY name');
-        const employees = await db.all('SELECT * FROM employees ORDER BY name');
-        
+
+        const menuItems = await db.all('SELECT * FROM menu_items WHERE is_available = 1 ORDER BY name');
+        const staff = await db.all('SELECT * FROM staff ORDER BY name');
+
         res.render('repairs', {
-            title: 'Ремонты',
-            repairs: repairs,
-            equipment: equipment,
-            employees: employees
+            title: 'Заказы',
+            orders,
+            menuItems,
+            staff
         });
     } catch (error) {
-        console.error('Ошибка загрузки ремонтов:', error);
+        console.error('Ошибка загрузки заказов:', error);
         res.render('repairs', {
-            title: 'Ремонты',
-            repairs: [],
-            equipment: [],
-            employees: []
+            title: 'Заказы',
+            orders: [],
+            menuItems: [],
+            staff: []
         });
     }
 });
 
-// ➕ ДОБАВЛЕНИЕ НОВОГО РЕМОНТА
-app.post('/repairs', async (req, res) => {
+app.post('/orders', async (req, res) => {
     try {
-        const { equipment_id, employee_id, repair_date, problem_description, solution, repair_cost } = req.body;
-        
+        const { menu_item_id, staff_id, order_date, customer_type, quantity, status, comment } = req.body;
+        const selectedItem = await db.get('SELECT price FROM menu_items WHERE id = ?', [menu_item_id]);
+        const qty = Math.max(parseInt(quantity, 10) || 1, 1);
+        const totalPrice = selectedItem ? (parseFloat(selectedItem.price) || 0) * qty : 0;
+
         await db.run(
-            `INSERT INTO repairs (equipment_id, employee_id, repair_date, problem_description, solution, repair_cost) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [equipment_id, employee_id, repair_date, problem_description, solution, repair_cost || 0]
+            `INSERT INTO orders (menu_item_id, staff_id, order_date, customer_type, quantity, total_price, status, comment)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                menu_item_id,
+                staff_id || null,
+                order_date,
+                customer_type,
+                qty,
+                totalPrice,
+                status || 'new',
+                comment || null
+            ]
         );
-        
-        res.redirect('/repairs');
+
+        res.redirect('/orders');
     } catch (error) {
-        console.error('Ошибка добавления ремонта:', error);
-        res.render('error', { 
+        console.error('Ошибка добавления заказа:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось добавить ремонт: ' + error.message 
+            error: 'Не удалось добавить заказ: ' + error.message
         });
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ РЕМОНТА - форма
-app.get('/repairs/edit/:id', async (req, res) => {
+app.get('/orders/edit/:id', async (req, res) => {
     try {
-        const repair = await db.get(`
-            SELECT r.*, e.name as equipment_name, emp.name as employee_name
-            FROM repairs r
-            LEFT JOIN equipment e ON r.equipment_id = e.id
-            LEFT JOIN employees emp ON r.employee_id = emp.id
-            WHERE r.id = ?
-        `, [req.params.id]);
-        
-        const equipment = await db.all('SELECT * FROM equipment ORDER BY name');
-        const employees = await db.all('SELECT * FROM employees ORDER BY name');
-        
+        const order = await db.get('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+        const menuItems = await db.all('SELECT * FROM menu_items ORDER BY name');
+        const staff = await db.all('SELECT * FROM staff ORDER BY name');
+
+        if (!order) {
+            return res.redirect('/orders');
+        }
+
         res.render('repairs-edit', {
-            title: 'Редактирование ремонта',
-            repair: repair,
-            equipment: equipment,
-            employees: employees
+            title: 'Редактирование заказа',
+            order,
+            menuItems,
+            staff
         });
     } catch (error) {
-        console.error('Ошибка загрузки ремонта для редактирования:', error);
-        res.redirect('/repairs');
+        console.error('Ошибка загрузки заказа:', error);
+        res.redirect('/orders');
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ РЕМОНТА - сохранение
-app.post('/repairs/edit/:id', async (req, res) => {
+app.post('/orders/edit/:id', async (req, res) => {
     try {
-        const { equipment_id, employee_id, repair_date, problem_description, solution, repair_cost, status } = req.body;
-        
+        const { menu_item_id, staff_id, order_date, customer_type, quantity, status, comment } = req.body;
+        const selectedItem = await db.get('SELECT price FROM menu_items WHERE id = ?', [menu_item_id]);
+        const qty = Math.max(parseInt(quantity, 10) || 1, 1);
+        const totalPrice = selectedItem ? (parseFloat(selectedItem.price) || 0) * qty : 0;
+
         await db.run(
-            `UPDATE repairs SET 
-                equipment_id = ?, employee_id = ?, repair_date = ?, problem_description = ?, 
-                solution = ?, repair_cost = ?, status = ?
+            `UPDATE orders
+             SET menu_item_id = ?, staff_id = ?, order_date = ?, customer_type = ?,
+                 quantity = ?, total_price = ?, status = ?, comment = ?
              WHERE id = ?`,
-            [equipment_id, employee_id, repair_date, problem_description, solution, repair_cost, status, req.params.id]
+            [
+                menu_item_id,
+                staff_id || null,
+                order_date,
+                customer_type,
+                qty,
+                totalPrice,
+                status,
+                comment || null,
+                req.params.id
+            ]
         );
-        
-        res.redirect('/repairs');
+
+        res.redirect('/orders');
     } catch (error) {
-        console.error('Ошибка редактирования ремонта:', error);
-        res.render('error', { 
+        console.error('Ошибка редактирования заказа:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось обновить ремонт: ' + error.message 
+            error: 'Не удалось обновить заказ: ' + error.message
         });
     }
 });
 
-// 🗑️ УДАЛЕНИЕ РЕМОНТА
-app.post('/repairs/delete/:id', async (req, res) => {
+app.post('/orders/delete/:id', async (req, res) => {
     try {
-        await db.run('DELETE FROM repairs WHERE id = ?', [req.params.id]);
-        res.redirect('/repairs');
+        await db.run('DELETE FROM orders WHERE id = ?', [req.params.id]);
+        res.redirect('/orders');
     } catch (error) {
-        console.error('Ошибка удаления ремонта:', error);
-        res.render('error', { 
+        console.error('Ошибка удаления заказа:', error);
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось удалить ремонт: ' + error.message 
+            error: 'Не удалось удалить заказ: ' + error.message
         });
     }
 });
 
-// 👥 СТРАНИЦА СОТРУДНИКОВ
-app.get('/employees', async (req, res) => {
+app.get('/staff', async (req, res) => {
     try {
-        const employees = await db.all('SELECT * FROM employees ORDER BY name');
+        const staff = await db.all('SELECT * FROM staff ORDER BY name');
         res.render('employees', {
-            title: 'Сотрудники',
-            employees: employees
+            title: 'Персонал столовой',
+            staff
         });
     } catch (error) {
-        console.error('Ошибка загрузки сотрудников:', error);
+        console.error('Ошибка загрузки персонала:', error);
         res.render('employees', {
-            title: 'Сотрудники',
-            employees: []
+            title: 'Персонал столовой',
+            staff: []
         });
     }
 });
 
-// ➕ ДОБАВЛЕНИЕ НОВОГО СОТРУДНИКА
-app.post('/employees', async (req, res) => {
+app.post('/staff', async (req, res) => {
     try {
-        const { name, position, department, phone, email } = req.body;
-        
+        const { name, position, shift, phone, email } = req.body;
+
         await db.run(
-            `INSERT INTO employees (name, position, department, phone, email) 
+            `INSERT INTO staff (name, position, shift, phone, email)
              VALUES (?, ?, ?, ?, ?)`,
-            [name, position, department, phone, email]
+            [name, position, shift, phone || null, email || null]
         );
-        
-        res.redirect('/employees');
+
+        res.redirect('/staff');
     } catch (error) {
         console.error('Ошибка добавления сотрудника:', error);
-        res.render('error', { 
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось добавить сотрудника: ' + error.message 
+            error: 'Не удалось добавить сотрудника: ' + error.message
         });
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ СОТРУДНИКА - форма
-app.get('/employees/edit/:id', async (req, res) => {
+app.get('/staff/edit/:id', async (req, res) => {
     try {
-        const employee = await db.get('SELECT * FROM employees WHERE id = ?', [req.params.id]);
-        
+        const staffMember = await db.get('SELECT * FROM staff WHERE id = ?', [req.params.id]);
+
+        if (!staffMember) {
+            return res.redirect('/staff');
+        }
+
         res.render('employees-edit', {
             title: 'Редактирование сотрудника',
-            employee: employee
+            staffMember
         });
     } catch (error) {
-        console.error('Ошибка загрузки сотрудника для редактирования:', error);
-        res.redirect('/employees');
+        console.error('Ошибка загрузки сотрудника:', error);
+        res.redirect('/staff');
     }
 });
 
-// ✏️ РЕДАКТИРОВАНИЕ СОТРУДНИКА - сохранение
-app.post('/employees/edit/:id', async (req, res) => {
+app.post('/staff/edit/:id', async (req, res) => {
     try {
-        const { name, position, department, phone, email } = req.body;
-        
+        const { name, position, shift, phone, email } = req.body;
+
         await db.run(
-            `UPDATE employees SET 
-                name = ?, position = ?, department = ?, phone = ?, email = ?
+            `UPDATE staff
+             SET name = ?, position = ?, shift = ?, phone = ?, email = ?
              WHERE id = ?`,
-            [name, position, department, phone, email, req.params.id]
+            [name, position, shift, phone || null, email || null, req.params.id]
         );
-        
-        res.redirect('/employees');
+
+        res.redirect('/staff');
     } catch (error) {
         console.error('Ошибка редактирования сотрудника:', error);
-        res.render('error', { 
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось обновить сотрудника: ' + error.message 
+            error: 'Не удалось обновить сотрудника: ' + error.message
         });
     }
 });
 
-// 🗑️ УДАЛЕНИЕ СОТРУДНИКА
-app.post('/employees/delete/:id', async (req, res) => {
+app.post('/staff/delete/:id', async (req, res) => {
     try {
-        await db.run('DELETE FROM employees WHERE id = ?', [req.params.id]);
-        res.redirect('/employees');
+        await db.run('DELETE FROM staff WHERE id = ?', [req.params.id]);
+        res.redirect('/staff');
     } catch (error) {
         console.error('Ошибка удаления сотрудника:', error);
-        res.render('error', { 
+        res.render('error', {
             title: 'Ошибка',
-            error: 'Не удалось удалить сотрудника: ' + error.message 
+            error: 'Не удалось удалить сотрудника: ' + error.message
         });
     }
 });
 
-// 📊 ВЫГРУЗКА PDF ОТЧЕТА
-app.get('/reports/repairs', ReportController.generateRepairsReport);
+app.get('/reports/orders', ReportController.generateOrdersReport);
 
-// Обработка ошибок
 app.use((req, res) => {
     res.status(404).render('error', {
         title: 'Страница не найдена',
@@ -385,14 +417,13 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Запуск приложения
 const startServer = async () => {
     try {
         await db.connect();
         console.log('✅ База данных подключена');
-        
+
         app.listen(PORT, () => {
-            console.log(`🚀 Система учета ремонта запущена на http://localhost:${PORT}`);
+            console.log(`🚀 Университетская столовая запущена на http://localhost:${PORT}`);
         });
     } catch (error) {
         console.error('❌ Ошибка запуска:', error);

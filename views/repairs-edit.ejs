@@ -7,90 +7,90 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">📊 Учет ремонта</a>
-                <ul class="nav-links">
-                    <li><a href="/">Дашборд</a></li>
-                    <li><a href="/equipment">Оборудование</a></li>
-                    <li><a href="/repairs">Ремонты</a></li>
-                    <li><a href="/employees">Сотрудники</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<header class="header">
+    <div class="container">
+        <nav class="navbar">
+            <a href="/" class="logo">🍽️ Университетская столовая</a>
+            <ul class="nav-links">
+                <li><a href="/">Дашборд</a></li>
+                <li><a href="/menu">Меню</a></li>
+                <li><a href="/orders" class="active">Заказы</a></li>
+                <li><a href="/staff">Персонал</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
-    <main class="main">
-        <div class="container">
-            <div class="page-header">
-                <h1>Редактирование ремонта</h1>
-                <a href="/repairs" class="btn btn-secondary">← Назад к списку</a>
-            </div>
-
-            <div class="form-container">
-                <form action="/repairs/edit/<%= repair.id %>" method="POST">
-                    <div class="form-group">
-                        <label for="equipment_id">Оборудование:</label>
-                        <select id="equipment_id" name="equipment_id" required>
-                            <option value="">Выберите оборудование</option>
-                            <% equipment.forEach(item => { %>
-                                <option value="<%= item.id %>" <%= repair.equipment_id == item.id ? 'selected' : '' %>>
-                                    <%= item.inventory_number %> - <%= item.name %> (<%= item.type_name %>)
-                                </option>
-                            <% }) %>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="employee_id">Исполнитель:</label>
-                        <select id="employee_id" name="employee_id" required>
-                            <option value="">Выберите сотрудника</option>
-                            <% employees.forEach(emp => { %>
-                                <option value="<%= emp.id %>" <%= repair.employee_id == emp.id ? 'selected' : '' %>>
-                                    <%= emp.name %> - <%= emp.position %>
-                                </option>
-                            <% }) %>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="repair_date">Дата ремонта:</label>
-                        <input type="date" id="repair_date" name="repair_date" 
-                               value="<%= repair.repair_date %>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="problem_description">Описание проблемы:</label>
-                        <textarea id="problem_description" name="problem_description" rows="3" required><%= repair.problem_description %></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="solution">Выполненные работы:</label>
-                        <textarea id="solution" name="solution" rows="3"><%= repair.solution || '' %></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="repair_cost">Стоимость ремонта (руб.):</label>
-                        <input type="number" id="repair_cost" name="repair_cost" step="0.01" min="0"
-                               value="<%= repair.repair_cost %>">
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Статус ремонта:</label>
-                        <select id="status" name="status">
-                            <option value="in_progress" <%= repair.status == 'in_progress' ? 'selected' : '' %>>В работе</option>
-                            <option value="completed" <%= repair.status == 'completed' ? 'selected' : '' %>>Завершен</option>
-                            <option value="cancelled" <%= repair.status == 'cancelled' ? 'selected' : '' %>>Отменен</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-                        <a href="/repairs" class="btn btn-secondary">Отмена</a>
-                    </div>
-                </form>
-            </div>
+<main class="main">
+    <div class="container">
+        <div class="page-header">
+            <h1>Редактирование заказа</h1>
+            <a href="/orders" class="btn btn-secondary">← Назад к заказам</a>
         </div>
-    </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        <div class="form-container">
+            <form action="/orders/edit/<%= order.id %>" method="POST">
+                <div class="form-group">
+                    <label for="menu_item_id">Блюдо:</label>
+                    <select id="menu_item_id" name="menu_item_id" required>
+                        <% menuItems.forEach(item => { %>
+                            <option value="<%= item.id %>" <%= order.menu_item_id == item.id ? 'selected' : '' %>>
+                                <%= item.name %> — <%= Number(item.price || 0).toFixed(2) %> руб.
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="staff_id">Сотрудник на выдаче:</label>
+                    <select id="staff_id" name="staff_id">
+                        <option value="" <%= !order.staff_id ? 'selected' : '' %>>Не назначать</option>
+                        <% staff.forEach(member => { %>
+                            <option value="<%= member.id %>" <%= order.staff_id == member.id ? 'selected' : '' %>>
+                                <%= member.name %> — <%= member.position %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="order_date">Дата заказа:</label>
+                    <input type="date" id="order_date" name="order_date" value="<%= order.order_date %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_type">Категория посетителя:</label>
+                    <select id="customer_type" name="customer_type" required>
+                        <option value="student" <%= order.customer_type === 'student' ? 'selected' : '' %>>Студент</option>
+                        <option value="teacher" <%= order.customer_type === 'teacher' ? 'selected' : '' %>>Преподаватель</option>
+                        <option value="guest" <%= order.customer_type === 'guest' ? 'selected' : '' %>>Гость</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Количество порций:</label>
+                    <input type="number" id="quantity" name="quantity" min="1" value="<%= order.quantity %>" required>
+                </div>
+                <div class="form-group">
+                    <label for="status">Статус:</label>
+                    <select id="status" name="status">
+                        <option value="new" <%= order.status === 'new' ? 'selected' : '' %>>Новый</option>
+                        <option value="preparing" <%= order.status === 'preparing' ? 'selected' : '' %>>Готовится</option>
+                        <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Выдан</option>
+                        <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Отменен</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий:</label>
+                    <textarea id="comment" name="comment" rows="3"><%= order.comment || '' %></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a href="/orders" class="btn btn-secondary">Отмена</a>
+                </div>
+            </form>
         </div>
-    </footer>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container"><p>&copy; 2026 Университетская столовая</p></div>
+</footer>
 </body>
 </html>

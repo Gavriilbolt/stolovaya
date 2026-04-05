@@ -2,112 +2,81 @@ const PDFDocument = require('pdfkit');
 const db = require('../config/database');
 
 class ReportController {
-    
-    // Отчет по ремонтам в PDF
-    static async generateRepairsReport(req, res) {
+    static async generateOrdersReport(req, res) {
         try {
-            // Получаем данные о ремонтах из базы
-            const repairs = await db.all(`
-                SELECT r.*, e.name as equipment_name, e.inventory_number, emp.name as employee_name
-                FROM repairs r
-                LEFT JOIN equipment e ON r.equipment_id = e.id
-                LEFT JOIN employees emp ON r.employee_id = emp.id
-                ORDER BY r.repair_date DESC
+            const orders = await db.all(`
+                SELECT o.*, mi.name AS menu_item_name, s.name AS staff_name
+                FROM orders o
+                LEFT JOIN menu_items mi ON o.menu_item_id = mi.id
+                LEFT JOIN staff s ON o.staff_id = s.id
+                ORDER BY o.order_date DESC, o.id DESC
             `);
 
-            // Создаем PDF документ
             const doc = new PDFDocument();
-            
-            // Настраиваем заголовки для скачивания файла
             res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', 'attachment; filename=repairs-report.pdf');
-            
-            // Подключаем PDF к ответу
+            res.setHeader('Content-Disposition', 'attachment; filename=cafeteria-orders-report.pdf');
             doc.pipe(res);
 
-            // Заголовок отчета (английскими буквами)
-            doc.fontSize(18)
-               .text('REPAIRS REPORT', { align: 'center' });
-            
+            doc.fontSize(18).text('UNIVERSITY CAFETERIA REPORT', { align: 'center' });
             doc.moveDown(0.5);
-            doc.fontSize(10)
-               .text(`Date: ${new Date().toLocaleDateString('ru-RU')}`, { align: 'center' });
-            doc.moveDown(2);
+            doc.fontSize(10).text(`Date: ${new Date().toLocaleDateString('ru-RU')}`, { align: 'center' });
+            doc.moveDown(1.5);
 
-            // Статистика
-            const totalCost = repairs.reduce((sum, repair) => sum + (parseFloat(repair.repair_cost) || 0), 0);
-            const completedRepairs = repairs.filter(r => r.status === 'completed').length;
-            const inProgressRepairs = repairs.filter(r => r.status === 'in_progress').length;
+            const revenue = orders.reduce((sum, order) => sum + (parseFloat(order.total_price) || 0), 0);
+            const completedOrders = orders.filter((o) => o.status === 'completed').length;
+            const newOrders = orders.filter((o) => o.status === 'new').length;
 
-            doc.fontSize(14)
-               .text('STATISTICS:');
-            
-            doc.fontSize(12)
-               .text(`Total repairs: ${repairs.length}`)
-               .text(`Completed: ${completedRepairs}`)
-               .text(`In progress: ${inProgressRepairs}`)
-               .text(`Total cost: ${totalCost.toFixed(2)} RUB`);
-            
-            doc.moveDown(2);
+            doc.fontSize(13).text('SUMMARY');
+            doc.moveDown(0.4);
+            doc.fontSize(11)
+                .text(`Total orders: ${orders.length}`)
+                .text(`Completed: ${completedOrders}`)
+                .text(`New/In progress: ${newOrders}`)
+                .text(`Revenue: ${revenue.toFixed(2)} RUB`);
 
-            // Список ремонтов
-            doc.fontSize(14)
-               .text('REPAIRS LIST:');
-            doc.moveDown(1);
+            doc.moveDown(1.5);
+            doc.fontSize(13).text('ORDERS LIST');
+            doc.moveDown(0.8);
 
-            // Добавляем каждый ремонт в отчет
-            repairs.forEach((repair, index) => {
-                // Если мало места на странице - создаем новую
-                if (doc.y > 650) {
+            orders.forEach((order, index) => {
+                if (doc.y > 680) {
                     doc.addPage();
-                    doc.fontSize(14)
-                       .text('REPAIRS LIST (continued):');
-                    doc.moveDown(1);
+                    doc.fontSize(13).text('ORDERS LIST (continued)');
+                    doc.moveDown(0.8);
                 }
 
-                // Информация о ремонте
-                doc.fontSize(12)
-                   .text(`${index + 1}. ${repair.equipment_name}`)
-                   .fontSize(10)
-                   .text(`   Inventory: ${repair.inventory_number}`)
-                   .text(`   Date: ${repair.repair_date}`)
-                   .text(`   Technician: ${repair.employee_name}`)
-                   .text(`   Problem: ${repair.problem_description}`);
+                const statusMap = {
+                    new: 'Новый',
+                    preparing: 'Готовится',
+                    completed: 'Выдан',
+                    cancelled: 'Отменен'
+                };
 
-                // Решение (если есть)
-                if (repair.solution && repair.solution.trim() !== '') {
-                    doc.text(`   Solution: ${repair.solution}`);
+                doc.fontSize(11)
+                    .text(`${index + 1}. ${order.menu_item_name || 'Блюдо удалено'}`)
+                    .fontSize(9)
+                    .text(`   Date: ${order.order_date}`)
+                    .text(`   Customer: ${order.customer_type === 'student' ? 'Студент' : order.customer_type === 'teacher' ? 'Преподаватель' : 'Гость'}`)
+                    .text(`   Quantity: ${order.quantity}`)
+                    .text(`   Amount: ${(parseFloat(order.total_price) || 0).toFixed(2)} RUB`)
+                    .text(`   Served by: ${order.staff_name || 'Не назначено'}`)
+                    .text(`   Status: ${statusMap[order.status] || order.status}`);
+
+                if (order.comment) {
+                    doc.text(`   Note: ${order.comment}`);
                 }
 
-                // Стоимость (если есть)
-                if (repair.repair_cost > 0) {
-                    doc.text(`   Cost: ${repair.repair_cost} RUB`);
-                }
-
-                // Статус
-                const statusText = repair.status === 'completed' ? 'COMPLETED' : 
-                                 repair.status === 'in_progress' ? 'IN PROGRESS' : 'CANCELLED';
-                doc.text(`   Status: ${statusText}`);
-                
-                // Разделительная линия между ремонтами
-                doc.moveDown(0.3);
-                doc.text('―'.repeat(50));
+                doc.moveDown(0.2);
+                doc.text('―'.repeat(52));
                 doc.moveDown(0.5);
             });
 
-            // Футер
-            if (doc.y > 700) {
-                doc.addPage();
-            }
-            
-            doc.moveDown(2);
+            doc.moveDown(1);
             doc.fontSize(8)
-               .text('― End of report ―', { align: 'center' })
-               .text(`Total records: ${repairs.length}`, { align: 'center' });
+                .text('― End of report ―', { align: 'center' })
+                .text(`Generated records: ${orders.length}`, { align: 'center' });
 
-            // Завершаем создание PDF
             doc.end();
-
         } catch (error) {
             console.error('Error generating PDF report:', error);
             res.status(500).send('Error generating PDF report');
