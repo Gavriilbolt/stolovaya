@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">📊 Учет ремонта</a>
+                <ul class="nav-links">
+                    <li><a href="/">Дашборд</a></li>
+                    <li><a href="/equipment">Оборудование</a></li>
+                    <li><a href="/repairs">Ремонты</a></li>
+                    <li><a href="/employees">Сотрудники</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <h1>Система учета ремонта оборудования</h1>
+            
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Всего оборудования</h3>
+                    <div class="stat-number"><%= stats.total_equipment %></div>
+                </div>
+                <div class="stat-card">
+                    <h3>В ремонте</h3>
+                    <div class="stat-number warning"><%= stats.equipment_in_repair %></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Всего ремонтов</h3>
+                    <div class="stat-number"><%= stats.total_repairs %></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Сотрудников</h3>
+                    <div class="stat-number"><%= stats.total_employees %></div>
+                </div>
+            </div>
+
+            <!-- Последние ремонты -->
+            <div class="recent-repairs">
+                <h2>Последние ремонты</h2>
+                <% if (recentRepairs.length > 0) { %>
+                    <div class="repairs-list">
+                        <% recentRepairs.forEach(repair => { %>
+                            <div class="repair-item">
+                                <div class="repair-header">
+                                    <strong><%= repair.equipment_name %></strong>
+                                    <span class="repair-date"><%= new Date(repair.repair_date).toLocaleDateString('ru-RU') %></span>
+                                </div>
+                                <div class="repair-details">
+                                    <p><strong>Проблема:</strong> <%= repair.problem_description %></p>
+                                    <p><strong>Исполнитель:</strong> <%= repair.employee_name %></p>
+                                    <% if (repair.solution) { %>
+                                        <p><strong>Решение:</strong> <%= repair.solution %></p>
+                                    <% } %>
+                                    <% if (repair.repair_cost > 0) { %>
+                                        <p><strong>Стоимость:</strong> <%= repair.repair_cost %> руб.</p>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <p>Ремонтов пока нет</p>
+                <% } %>
+                <a href="/repairs" class="btn btn-primary">Все ремонты</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">📊 Учет ремонта</a>
+                <ul class="nav-links">
+                    <li><a href="/">Дашборд</a></li>
+                    <li><a href="/equipment">Оборудование</a></li>
+                    <li><a href="/repairs">Ремонты</a></li>
+                    <li><a href="/employees">Сотрудники</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h1>Редактирование ремонта</h1>
+                <a href="/repairs" class="btn btn-secondary">← Назад к списку</a>
+            </div>
+
+            <div class="form-container">
+                <form action="/repairs/edit/<%= repair.id %>" method="POST">
+                    <div class="form-group">
+                        <label for="equipment_id">Оборудование:</label>
+                        <select id="equipment_id" name="equipment_id" required>
+                            <option value="">Выберите оборудование</option>
+                            <% equipment.forEach(item => { %>
+                                <option value="<%= item.id %>" <%= repair.equipment_id == item.id ? 'selected' : '' %>>
+                                    <%= item.inventory_number %> - <%= item.name %> (<%= item.type_name %>)
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee_id">Исполнитель:</label>
+                        <select id="employee_id" name="employee_id" required>
+                            <option value="">Выберите сотрудника</option>
+                            <% employees.forEach(emp => { %>
+                                <option value="<%= emp.id %>" <%= repair.employee_id == emp.id ? 'selected' : '' %>>
+                                    <%= emp.name %> - <%= emp.position %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="repair_date">Дата ремонта:</label>
+                        <input type="date" id="repair_date" name="repair_date" 
+                               value="<%= repair.repair_date %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="problem_description">Описание проблемы:</label>
+                        <textarea id="problem_description" name="problem_description" rows="3" required><%= repair.problem_description %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="solution">Выполненные работы:</label>
+                        <textarea id="solution" name="solution" rows="3"><%= repair.solution || '' %></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="repair_cost">Стоимость ремонта (руб.):</label>
+                        <input type="number" id="repair_cost" name="repair_cost" step="0.01" min="0"
+                               value="<%= repair.repair_cost %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Статус ремонта:</label>
+                        <select id="status" name="status">
+                            <option value="in_progress" <%= repair.status == 'in_progress' ? 'selected' : '' %>>В работе</option>
+                            <option value="completed" <%= repair.status == 'completed' ? 'selected' : '' %>>Завершен</option>
+                            <option value="cancelled" <%= repair.status == 'cancelled' ? 'selected' : '' %>>Отменен</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        <a href="/repairs" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        </div>
+    </footer>
+</body>
+</html>

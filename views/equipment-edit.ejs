@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">📊 Учет ремонта</a>
+                <ul class="nav-links">
+                    <li><a href="/">Дашборд</a></li>
+                    <li><a href="/equipment">Оборудование</a></li>
+                    <li><a href="/repairs">Ремонты</a></li>
+                    <li><a href="/employees">Сотрудники</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h1>Редактирование оборудования</h1>
+                <a href="/equipment" class="btn btn-secondary">← Назад к списку</a>
+            </div>
+
+            <div class="form-container">
+                <form action="/equipment/edit/<%= equipment.id %>" method="POST">
+                    <div class="form-group">
+                        <label for="type_id">Тип оборудования:</label>
+                        <select id="type_id" name="type_id" required>
+                            <option value="">Выберите тип</option>
+                            <% equipmentTypes.forEach(type => { %>
+                                <option value="<%= type.id %>" <%= equipment.type_id == type.id ? 'selected' : '' %>>
+                                    <%= type.name %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventory_number">Инвентарный номер:</label>
+                        <input type="text" id="inventory_number" name="inventory_number" 
+                               value="<%= equipment.inventory_number %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Название:</label>
+                        <input type="text" id="name" name="name" value="<%= equipment.name %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="model">Модель:</label>
+                        <input type="text" id="model" name="model" value="<%= equipment.model || '' %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_date">Дата приобретения:</label>
+                        <input type="date" id="purchase_date" name="purchase_date" 
+                               value="<%= equipment.purchase_date %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Местонахождение:</label>
+                        <input type="text" id="location" name="location" value="<%= equipment.location || '' %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Статус:</label>
+                        <select id="status" name="status">
+                            <option value="active" <%= equipment.status == 'active' ? 'selected' : '' %>>Работает</option>
+                            <option value="repair" <%= equipment.status == 'repair' ? 'selected' : '' %>>В ремонте</option>
+                            <option value="inactive" <%= equipment.status == 'inactive' ? 'selected' : '' %>>Неактивно</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                        <a href="/equipment" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Система учета ремонта оборудования</p>
+        </div>
+    </footer>
+</body>
+</html>
