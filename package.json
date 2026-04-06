@@ -1,8 +1,8 @@
 {
-  "name": "pg-app",
+  "name": "stolovaya-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "University cafeteria management app (Express + EJS + SQLite)",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -12,14 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
     "pdfkit": "^0.17.2",
-    "pg": "^8.16.3",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

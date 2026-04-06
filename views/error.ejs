@@ -1,38 +1,7 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> | Университетская столовая</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-<header class="header">
-    <div class="container">
-        <nav class="navbar">
-            <a href="/" class="logo">🍽️ Университетская столовая</a>
-            <ul class="nav-links">
-                <li><a href="/">Дашборд</a></li>
-                <li><a href="/menu">Меню</a></li>
-                <li><a href="/orders">Заказы</a></li>
-                <li><a href="/staff">Персонал</a></li>
-            </ul>
-        </nav>
-    </div>
-</header>
-
-<main class="main">
-    <div class="container">
-        <div class="empty-state">
-            <h1>Ошибка</h1>
-            <p class="error-message"><%= error %></p>
-            <a href="/" class="btn btn-primary">Вернуться на главную</a>
-        </div>
-    </div>
-</main>
-
-<footer class="footer">
-    <div class="container"><p>&copy; 2026 Университетская столовая</p></div>
-</footer>
-</body>
-</html>
+<%- include('partials/header', { title, active: '' }) %>
+<div class="empty-state">
+    <h1>Ошибка</h1>
+    <p class="error-message"><%= error %></p>
+    <a href="/" class="btn btn-primary">Вернуться на главную</a>
+</div>
+<%- include('partials/footer') %>

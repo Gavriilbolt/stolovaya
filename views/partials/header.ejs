@@ -12,10 +12,10 @@
         <nav class="navbar">
             <a href="/" class="logo">🍽️ Университетская столовая</a>
             <ul class="nav-links">
-                <li><a href="/">Дашборд</a></li>
-                <li><a href="/menu">Меню</a></li>
-                <li><a href="/orders">Заказы</a></li>
-                <li><a href="/staff">Персонал</a></li>
+                <li><a href="/" class="<%= active === 'dashboard' ? 'active' : '' %>">Дашборд</a></li>
+                <li><a href="/menu" class="<%= active === 'menu' ? 'active' : '' %>">Меню</a></li>
+                <li><a href="/orders" class="<%= active === 'orders' ? 'active' : '' %>">Заказы</a></li>
+                <li><a href="/staff" class="<%= active === 'staff' ? 'active' : '' %>">Персонал</a></li>
             </ul>
         </nav>
     </div>

@@ -1,0 +1,72 @@
+<%- include('partials/header', { title, active: 'orders' }) %>
+<div class="page-header">
+    <h1>Редактирование заказа</h1>
+    <a href="/orders" class="btn btn-secondary">← Назад к заказам</a>
+</div>
+
+<div class="form-container">
+    <form action="/orders/edit/<%= order.id %>" method="POST">
+        <div class="form-group">
+            <label>Позиции заказа:</label>
+            <div id="orderItemsContainer">
+                <% const rows = (orderItems && orderItems.length > 0) ? orderItems : [{ menu_item_id: '', quantity: 1 }]; %>
+                <% rows.forEach((row, idx) => { %>
+                    <div class="order-item-row">
+                        <select name="items[<%= idx %>][menu_item_id]" required>
+                            <option value="">Выберите блюдо</option>
+                            <% menuItems.forEach(item => { %>
+                                <option value="<%= item.id %>" <%= String(row.menu_item_id) === String(item.id) ? 'selected' : '' %>>
+                                    <%= item.name %> — <%= Number(item.price || 0).toFixed(2) %> руб.
+                                </option>
+                            <% }) %>
+                        </select>
+                        <input type="number" name="items[<%= idx %>][quantity]" min="1" value="<%= row.quantity || 1 %>" required class="order-item-qty">
+                        <button type="button" class="btn btn-small btn-danger order-item-remove" title="Убрать">✖</button>
+                    </div>
+                <% }) %>
+            </div>
+            <button type="button" class="btn btn-secondary" id="addOrderItemBtn">+ Добавить блюдо</button>
+        </div>
+        <div class="form-group">
+            <label for="staff_id">Сотрудник на выдаче:</label>
+            <select id="staff_id" name="staff_id">
+                <option value="" <%= !order.staff_id ? 'selected' : '' %>>Не назначать</option>
+                <% staff.forEach(member => { %>
+                    <option value="<%= member.id %>" <%= order.staff_id == member.id ? 'selected' : '' %>>
+                        <%= member.name %> — <%= member.position %>
+                    </option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="order_date">Дата заказа:</label>
+            <input type="date" id="order_date" name="order_date" value="<%= order.order_date %>" required>
+        </div>
+        <div class="form-group">
+            <label for="customer_type">Категория посетителя:</label>
+            <select id="customer_type" name="customer_type" required>
+                <option value="student" <%= order.customer_type === 'student' ? 'selected' : '' %>>Студент</option>
+                <option value="teacher" <%= order.customer_type === 'teacher' ? 'selected' : '' %>>Преподаватель</option>
+                <option value="guest" <%= order.customer_type === 'guest' ? 'selected' : '' %>>Гость</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status">Статус:</label>
+            <select id="status" name="status">
+                <option value="new" <%= order.status === 'new' ? 'selected' : '' %>>Новый</option>
+                <option value="preparing" <%= order.status === 'preparing' ? 'selected' : '' %>>Готовится</option>
+                <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Выдан</option>
+                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Отменен</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="comment">Комментарий:</label>
+            <textarea id="comment" name="comment" rows="3"><%= order.comment || '' %></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+            <a href="/orders" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+<%- include('partials/footer') %>

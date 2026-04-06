@@ -1,48 +1,24 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <nav class="navbar">
-                <a href="/" class="logo">🍽️ Университетская столовая</a>
-                <ul class="nav-links">
-                    <li><a href="/" class="active">Дашборд</a></li>
-                    <li><a href="/menu">Меню</a></li>
-                    <li><a href="/orders">Заказы</a></li>
-                    <li><a href="/staff">Персонал</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<%- include('partials/header', { title, active: 'dashboard' }) %>
+<h1>Панель управления столовой</h1>
 
-    <main class="main">
-        <div class="container">
-            <h1>Панель управления столовой</h1>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Блюд в меню</h3>
-                    <div class="stat-number"><%= stats.total_menu_items %></div>
-                </div>
-                <div class="stat-card warning">
-                    <h3>Доступно сегодня</h3>
-                    <div class="stat-number"><%= stats.available_menu_items %></div>
-                </div>
-                <div class="stat-card">
-                    <h3>Всего заказов</h3>
-                    <div class="stat-number"><%= stats.total_orders %></div>
-                </div>
-                <div class="stat-card">
-                    <h3>Сотрудников</h3>
-                    <div class="stat-number"><%= stats.total_staff %></div>
-                </div>
-            </div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Блюд в меню</h3>
+        <div class="stat-number"><%= stats.total_menu_items %></div>
+    </div>
+    <div class="stat-card warning">
+        <h3>Доступно сегодня</h3>
+        <div class="stat-number"><%= stats.available_menu_items %></div>
+    </div>
+    <div class="stat-card">
+        <h3>Всего заказов</h3>
+        <div class="stat-number"><%= stats.total_orders %></div>
+    </div>
+    <div class="stat-card">
+        <h3>Сотрудников</h3>
+        <div class="stat-number"><%= stats.total_staff %></div>
+    </div>
+</div>
 
             <div class="recent-repairs">
                 <h2>Последние заказы</h2>
@@ -51,14 +27,13 @@
                         <% recentOrders.forEach(order => { %>
                             <div class="repair-item">
                                 <div class="repair-header">
-                                    <strong><%= order.menu_item_name || 'Блюдо удалено' %></strong>
+                                    <strong><%= order.items_summary || '—' %></strong>
                                     <span class="repair-date"><%= new Date(order.order_date).toLocaleDateString('ru-RU') %></span>
                                 </div>
                                 <div class="repair-details">
                                     <p><strong>Тип клиента:</strong>
                                         <%= order.customer_type === 'student' ? 'Студент' : order.customer_type === 'teacher' ? 'Преподаватель' : 'Гость' %>
                                     </p>
-                                    <p><strong>Количество:</strong> <%= order.quantity %> порц.</p>
                                     <p><strong>Сумма:</strong> <%= Number(order.total_price || 0).toFixed(2) %> руб.</p>
                                     <p><strong>Выдал:</strong> <%= order.staff_name || 'Не назначено' %></p>
                                 </div>
@@ -70,13 +45,4 @@
                 <% } %>
                 <a href="/orders" class="btn btn-primary">Все заказы</a>
             </div>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2026 Университетская столовая</p>
-        </div>
-    </footer>
-</body>
-</html>
+<%- include('partials/footer') %>
